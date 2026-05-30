@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Open Graph Preview Simulator</title>
+        <link href="/css/index.css" rel="stylesheet" />
+    </head>
+    <body>
+        <h2>Open Graph Preview Simulator</h2>
+
+        <div style="display: flex; flex-direction: column">
+            <input id="url" placeholder="Enter URL..." required />
+
+            <p style="font-size: 14px; margin-top: 0.5em; margin-bottom: 0.5em">Agent</p>
+            <input id="user-agent" placeholder="Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)" />
+
+            <button onclick="fetchPreview()">Generate Preview</button>
+
+            <div id="card" class="card" style="display: none">
+                <img id="img" class="image" />
+                <div class="content">
+                    <div id="title" class="title"></div>
+                    <div id="desc" class="desc"></div>
+                    <div id="site" class="site"></div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            async function fetchPreview() {
+                try {
+                    const url = document.getElementById("url").value;
+
+                    if (!url) {
+                        document.getElementById("url").focus();
+                        return;
+                    }
+
+                    const agent = document.getElementById("user-agent").value;
+                    const agentQuery = agent ? `&agent=${encodeURIComponent(agent)}` : "";
+
+                    const res = await fetch("/preview?url=" + encodeURIComponent(url) + agentQuery);
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        console.log(res);
+                        throw new Error(`Failed: ${res.status} ${res.statusText}`);
+                        return;
+                    }
+
+                    document.getElementById("card").style.display = "block";
+
+                    document.getElementById("img").src = data.image || "";
+                    document.getElementById("title").textContent = data.title || "No title";
+                    document.getElementById("desc").textContent = data.description || "";
+                    document.getElementById("site").textContent = data.site || "";
+                } catch (error) {
+                    console.log(error);
+                    document.getElementById("card").style.display = "none";
+                }
+            }
+        </script>
+    </body>
+</html>
