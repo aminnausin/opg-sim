@@ -6,23 +6,23 @@
   "author": "",
   "main": "index.ts",
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -c \"blue.bold,red.bold\" \"npm:es:dev\" \"npm:vite:dev\"",
-    "vite:dev": "vite dev",
+    "dev": "concurrently -k -p \"[{name}]\" -c \"blue.bold,red.bold\" \"npm:es:dev\" \"npm:watch:css\"",
     "es:dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "watch:css": "npx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/output.css --watch",
+    "build:css": "npx @tailwindcss/cli -i ./public/css/input.css -o ./public/css/output.css --minify",
+    "build": "tsc && npm run build:css",
+    "start": "node dist/src/index.js"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.0",
-    "express": "^5.2.1",
-    "tailwindcss": "^4.3.0"
+    "@tailwindcss/cli": "^4.3.0",
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "concurrently": "^10.0.0",
+    "tailwindcss": "^4.3.0",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.14"
+    "typescript": "^6.0.3"
   }
 }

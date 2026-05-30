@@ -3,17 +3,24 @@
     <head>
         <title>Open Graph Preview Simulator</title>
         <link href="/css/index.css" rel="stylesheet" />
+        <link href="/css/output.css" rel="stylesheet" />
     </head>
-    <body>
-        <h2>Open Graph Preview Simulator</h2>
+    <body class="space-y-4 mx-auto p-3">
+        <h2 class="text-2xl">Open Graph Preview Simulator</h2>
 
-        <div style="display: flex; flex-direction: column">
-            <input id="url" placeholder="Enter URL..." required />
+        <div class="flex flex-col gap-4">
+            <input id="url" placeholder="Enter URL..." required class="flex-1 bg-neutral-200 text-neutral-900 focus:bg-white transition-colors duration-200" />
 
-            <p style="font-size: 14px; margin-top: 0.5em; margin-bottom: 0.5em">Agent</p>
-            <input id="user-agent" placeholder="Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)" />
+            <div class="gap-y-2 flex flex-col w-full">
+                <label class="text-sm"> Agent </label>
+                <input
+                    id="user-agent"
+                    placeholder="Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"
+                    class="w-full bg-neutral-200 text-neutral-900 focus:bg-white transition-colors duration-200"
+                />
+            </div>
 
-            <button onclick="fetchPreview()">Generate Preview</button>
+            <button onclick="fetchPreview()" class="">Generate Preview</button>
 
             <div id="card" class="card" style="display: none">
                 <img id="img" class="image" />
