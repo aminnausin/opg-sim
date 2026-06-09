@@ -4,44 +4,220 @@
         <title>Open Graph Preview Simulator</title>
         <link href="/css/index.css" rel="stylesheet" />
         <link href="/css/output.css" rel="stylesheet" />
+        <script src="/js/alpine.js" defer></script>
+        <style>
+            [x-cloak] {
+                display: none !important;
+            }
+
+            .card-enter {
+                animation: cardIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            }
+
+            @keyframes cardIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(8px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .img-skeleton {
+                background: linear-gradient(90deg, #1b1b1b 25%, #252525 50%, #1b1b1b 75%);
+                background-size: 200% 100%;
+                animation: shimmer 1.4s infinite;
+            }
+
+            @keyframes shimmer {
+                from {
+                    background-position: 200% 0;
+                }
+                to {
+                    background-position: -200% 0;
+                }
+            }
+
+            .error-shake {
+                animation: shake 0.35s ease;
+            }
+
+            @keyframes shake {
+                0%,
+                100% {
+                    transform: translateX(0);
+                }
+                25% {
+                    transform: translateX(-6px);
+                }
+                75% {
+                    transform: translateX(6px);
+                }
+            }
+        </style>
     </head>
-    <body class="space-y-4 mx-auto p-3">
-        <h2 class="text-2xl">Open Graph Preview Simulator</h2>
+    <body
+        class="space-y-4 mx-auto p-3 text-sm"
+        x-data="{
+            loading: false,
+            success: false,
+            error: null,
 
-        <div class="flex flex-col gap-4">
-            <input id="url" placeholder="Enter URL..." required class="flex-1 bg-neutral-200 text-neutral-900 focus:bg-white transition-colors duration-200" />
+            async submit() {
+                const url = document.getElementById('url').value.trim();
 
-            <div class="gap-y-2 flex flex-col w-full">
-                <label class="text-sm"> Agent </label>
+                if (!url) {
+                    document.getElementById('url').focus();
+                    const input = document.getElementById('url');
+                    input.classList.add('error-shake');
+                    setTimeout(() => input.classList.remove('error-shake'), 400);
+                    return;
+                }
+
+                this.loading = true;
+                this.error = null;
+                this.success = false;
+                await fetchPreview();
+            },
+        }"
+    >
+        <h2 class="text-xl font-semibold mb-1">Open Graph Preview Simulator</h2>
+        <p class="text-sm opacity-60 mb-6">See how a URL appears when shared on Discord or social media.</p>
+
+        <form class="flex flex-col gap-4" @submit.prevent="submit()">
+            <div class="flex gap-2">
                 <input
-                    id="user-agent"
-                    placeholder="Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"
-                    class="w-full bg-neutral-200 text-neutral-900 focus:bg-white transition-colors duration-200"
+                    id="url"
+                    placeholder="https://example.com"
+                    autocomplete="off"
+                    spellcheck="false"
+                    class="flex-1 bg-neutral-800 text-white focus:bg-neutral-700 outline-transparent focus:outline-neutral-500 focus:outline-1 duration-200 disabled:opacity-60 transition-[opacity,background-color,outline-width,outline-color]"
+                    :disabled="loading"
                 />
+
+                <button
+                    type="submit"
+                    class="disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-1 whitespace-nowrap w-36!"
+                    :disabled="loading"
+                >
+                    <svg x-show="loading" x-cloak xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="shrink-0 size-3.5">
+                        <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" />
+                        <path
+                            fill="currentColor"
+                            d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
+                            class="spinner-origin animate-spin"
+                        />
+                    </svg>
+
+                    <span class="truncate" x-text="loading ? 'Fetching...' : 'Generate Preview'"></span>
+                </button>
             </div>
 
-            <button onclick="fetchPreview()" class="">Generate Preview</button>
+            <details class="group">
+                <summary class="text-xs opacity-80 cursor-pointer select-none hover:opacity-100 transition-opacity w-fit flex items-center gap-1">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        class="transition-transform group-open:rotate-90 size-2.5"
+                    >
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
+                    Custom user agent
+                </summary>
+                <div class="mt-2">
+                    <input
+                        id="user-agent"
+                        placeholder="Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"
+                        class="w-full bg-neutral-800 text-white focus:bg-neutral-700 outline-transparent focus:outline-neutral-500 focus:outline-1 duration-200 disabled:opacity-60 transition-[opacity,background-color,outline-width,outline-color]"
+                        :disabled="loading"
+                    />
+                </div>
+            </details>
 
-            <div id="card" class="card" style="display: none">
-                <img id="img" class="image" />
-                <div class="content">
-                    <div id="title" class="title"></div>
-                    <div id="desc" class="desc"></div>
-                    <div id="site" class="site"></div>
+            <div
+                x-show="error"
+                x-cloak
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-1"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                class="flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm"
+                style="background: rgba(239, 68, 68, 0.6); color: #fff"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="shrink-0 my-0.5 size-4"
+                >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span x-text="error"></span>
+            </div>
+
+            <div x-show="loading" x-cloak class="card card-enter">
+                <div class="img-skeleton w-full" style="aspect-ratio: 1.91/1"></div>
+                <div class="space-y-2 p-3">
+                    <div class="img-skeleton h-4 rounded w-2/3"></div>
+                    <div class="img-skeleton h-3 rounded w-full"></div>
+                    <div class="img-skeleton h-3 rounded w-1/3"></div>
                 </div>
             </div>
-        </div>
+
+            <div id="card" class="card card-enter" x-show="!loading && success" x-cloak>
+                <div class="relative bg-neutral-800" style="aspect-ratio: 1.91/1" id="img-wrap">
+                    <div id="img-spinner" class="absolute inset-0 flex items-center justify-center transition-opacity duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class="size-8">
+                            <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" />
+                            <path
+                                fill="currentColor"
+                                d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
+                                class="spinner-origin animate-spin duration-75"
+                            />
+                        </svg>
+                    </div>
+                    <img id="img" class="image absolute inset-0 size-full object-cover" style="opacity: 0; transition: opacity 0.3s ease" />
+                </div>
+                <div class="space-y-1.5 p-3">
+                    <div id="title" class="font-semibold leading-snug"></div>
+                    <div id="desc" class="opacity-80 line-clamp-2 leading-snug"></div>
+                    <div id="site" class="text-xs opacity-60 truncate"></div>
+                </div>
+            </div>
+        </form>
 
         <script>
+            document.getElementById("img").addEventListener("load", () => {
+                document.getElementById("img-spinner").style.opacity = "0";
+                document.getElementById("img").style.opacity = "1";
+            });
+
+            document.getElementById("img").addEventListener("error", () => {
+                document.getElementById("img-spinner").style.opacity = "0";
+                document.getElementById("img-wrapper").style.display = "none";
+            });
+
             async function fetchPreview() {
+                const bodyEl = document.querySelector("body");
+                const alpine = Alpine.$data(bodyEl);
+
                 try {
-                    const url = document.getElementById("url").value;
+                    document.getElementById("img-spinner").style.opacity = "1";
+                    document.getElementById("img").style.opacity = "0";
 
-                    if (!url) {
-                        document.getElementById("url").focus();
-                        return;
-                    }
-
+                    const url = document.getElementById("url").value.trim();
                     const agent = document.getElementById("user-agent").value;
                     const agentQuery = agent ? `&agent=${encodeURIComponent(agent)}` : "";
 
@@ -50,19 +226,21 @@
 
                     if (!res.ok) {
                         console.log(res);
-                        throw new Error(`Failed: ${res.status} ${res.statusText}`);
-                        return;
+                        throw new Error(data.message || `${res.status} ${res.statusText}`);
                     }
-
-                    document.getElementById("card").style.display = "block";
 
                     document.getElementById("img").src = data.image || "";
                     document.getElementById("title").textContent = data.title || "No title";
                     document.getElementById("desc").textContent = data.description || "";
-                    document.getElementById("site").textContent = data.site || "";
+                    document.getElementById("site").textContent = data.site || new URL(url).hostname;
+
+                    alpine.success = true;
                 } catch (error) {
-                    console.log(error);
-                    document.getElementById("card").style.display = "none";
+                    console.error(error);
+                    alpine.error = error.message || "Something went wrong. Check the URL and try again.";
+                    alpine.success = false;
+                } finally {
+                    alpine.loading = false;
                 }
             }
         </script>
